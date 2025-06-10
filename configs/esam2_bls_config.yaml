@@ -1,0 +1,66 @@
+# Model Parameters
+model_params:
+  img_channels: 3         # Number of input image channels (e.g., 1 for grayscale, 3 for RGB)
+  num_classes: 1          # Number of output classes (1 for binary segmentation)
+  
+  # Encoder (Adapter-based Hiera Encoder) parameters
+  encoder_initial_channels: 64
+  encoder_stage_channels:  # Example, adjust based on SAM2 Hiera
+  encoder_layers_per_stage: [2, 2, 2, 2]      # Example, num HieraLayers per stage
+  encoder_pool_strides: [2, 2, 2, 2]          # Example, pooling at start of each stage (patch_embed + 3 Hiera stages)
+  # adapter_intermediate_channels_ratio in AdapterModule (default 0.25 in model.py)
+
+  # MSIF BottleNeck Block parameters
+  msif_bottleneck_channels_ratio: 0.5 # Ratio for MSIF internal channels
+  msif_out_channels_ratio: 1.0        # Ratio for MSIF output channels relative to its input
+
+  # Decoder (Lightweight Decoder) parameters
+  # decoder_channels_list should match the number of upsampling stages
+  # Example: if encoder_stage_channels has 4 stages, and MSIF uses output of last stage,
+  # then 3 upsampling stages are common. Skip connections come from encoder_stage_channels[::-1].
+  decoder_channels_list:  # Example output channels for each DecoderBlock
+  deep_supervision_levels: 3            # L=3
+
+# Data Parameters
+data_params:
+  img_size: 256           # Image size for training and evaluation
+  # Paths to datasets - replace with your actual paths
+  # train_data_dir: "/path/to/your/train_data"
+  # val_data_dir: "/path/to/your/val_data"
+  # test_data_dir: "/path/to/your/test_data"
+  num_train_samples: 1000 # For DummyDataset
+  num_val_samples: 200    # For DummyDataset
+  num_test_samples: 100   # For DummyDataset
+
+# Training Parameters
+train_params:
+  seed: 42
+  num_epochs: 100
+  batch_size: 8
+  num_workers: 4
+  output_dir: "training_output" # Directory to save models and logs
+  save_checkpoint_freq: 10      # Save a checkpoint every N epochs
+
+# Loss Function Parameters
+loss_params:
+  lambda_iou: 1.0         # Weight for main IoU loss (hyperparameter)
+  lambda_bce: 1.0         # Weight for main BCE loss (hyperparameter)
+  lambda_ds: 1.0          # Weight for Deep Supervision loss (hyperparameter)
+  # ds_weights for L=3 deep supervision layers
+  ds_weights: [0.2, 0.3, 0.5] 
+
+# Optimizer Parameters
+optimizer_params:
+  learning_rate: 0.0001
+  weight_decay: 0.00001   # AdamW incorporates weight decay
+
+# Scheduler Parameters
+scheduler_params:
+  T_max: 100              # Maximum number of iterations (often num_epochs)
+  eta_min: 0.000001       # Minimum learning rate
+
+# Evaluation Parameters (Optional, can override some train_params for eval script)
+eval_params:
+  seed: 42
+  batch_size: 16          # Can be different from training batch size
+  num_workers: 4
